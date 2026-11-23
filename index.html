@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#000000">
+  <title>Hồ sơ sức khỏe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600&display=swap&subset=vietnamese" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="logo" href="./" aria-label="Hồ sơ sức khỏe">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17 L10 3 L17 17 Z" fill="none" stroke="#8052ff" stroke-width="2.2" stroke-linejoin="round"/></svg>
+      <span>Hồ sơ sức khỏe</span>
+    </a>
+    <button class="ghost" id="nut-khoa" type="button" hidden>Khoá lại</button>
+  </header>
+
+  <main>
+    <section class="hero" id="man-khoa">
+      <div class="hero-chu">
+        <p class="nhan">Riêng tư · đã mã hoá</p>
+        <h1 class="display">Hồ sơ<br>sức khỏe.</h1>
+        <p class="than">Nội dung được mã hoá ngay trong trình duyệt. Nhập mật khẩu để mở.</p>
+        <form class="mo" id="form-mo" autocomplete="off">
+          <label class="an-nhan" for="mat-khau">Mật khẩu</label>
+          <input id="mat-khau" type="password" inputmode="numeric" maxlength="32" placeholder="Mật khẩu" autocomplete="off" spellcheck="false">
+          <button class="nut" id="nut-mo" type="submit">Mở hồ sơ</button>
+        </form>
+        <p class="bao" id="bao" role="status" aria-live="polite"></p>
+      </div>
+      <div class="hero-hinh" id="cho-sao"><canvas id="sao" aria-hidden="true"></canvas></div>
+    </section>
+
+    <div id="ho-so" hidden></div>
+  </main>
+
+  <dialog id="xem-anh" aria-label="Ảnh phiếu gốc">
+    <button class="ghost dong" type="button" id="dong-anh">Đóng</button>
+    <img id="anh-lon" alt="">
+    <p class="chu-anh" id="chu-anh"></p>
+  </dialog>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
