@@ -1,7 +1,7 @@
 // Hồ sơ sức khỏe — mở khoá bằng mật khẩu, giải mã trong trình duyệt, dựng trang.
 // Dữ liệu chỉ nằm trong du-lieu.enc.json (AES-GCM 256, khoá dẫn bằng Argon2id). File này không chứa số liệu nào.
-import { batSao } from './sao.js';
-import { dungPhanTich } from './phan-tich.js';
+import { batSao } from './sao.js?v=3';
+import { dungPhanTich } from './phan-tich.js?v=3';
 
 const $ = (s) => document.querySelector(s);
 const DO_DAI_TU_THU = 6;              // từ ký tự thứ 6 trở đi là tự thử ngầm
@@ -55,38 +55,48 @@ async function giaiMa(matKhau) {
   return JSON.parse(new TextDecoder().decode(ro));
 }
 
-// tuDong = true: thử ngầm trong lúc gõ (từ ký tự thứ 6), chỉ báo sai khi người dùng đã ngừng gõ.
-let canThuLai = false;
-let henBaoSai = 0;
-async function thuMo(tuDong = false) {
+// tay = true: người dùng bấm Enter / nút "Mở hồ sơ" → sai thì báo.
+// tay = false: thử ngầm trong lúc gõ (từ ký tự thứ 6) → đúng thì tự mở, sai thì IM LẶNG (có thể chưa gõ xong).
+let choThu = null; // lượt thử xếp hàng khi lượt trước còn đang chạy: { tay }
+const baoSai = (o) => { $('#bao').textContent = 'Sai mật khẩu.'; o.select(); };
+
+async function thuMo(tay = false) {
   const o = $('#mat-khau');
   const mk = o.value.trim();
   if (mk.length < DO_DAI_TU_THU) {
-    if (!tuDong) $('#bao').textContent = 'Mật khẩu có ít nhất 6 ký tự.';
+    if (tay) $('#bao').textContent = 'Mật khẩu có ít nhất 6 ký tự.';
     return;
   }
-  if (dangMo) { canThuLai = true; return; }
+  if (dangMo) {
+    // Không bỏ lượt: nhớ lại, chạy sau khi lượt hiện tại xong (giữ cờ "bấm tay" nếu có)
+    choThu = { tay: tay || !!choThu?.tay };
+    if (tay) $('#bao').textContent = 'Đang mở…';
+    return;
+  }
   dangMo = true;
-  clearTimeout(henBaoSai);
-  if (!tuDong) { $('#nut-mo').disabled = true; $('#bao').textContent = 'Đang mở…'; }
+  if (tay) { $('#nut-mo').disabled = true; $('#bao').textContent = 'Đang mở…'; }
+  let moDuoc = false;
   try {
     const d = await giaiMa(mk);
-    if (!d) {
-      if (!tuDong) { $('#bao').textContent = 'Sai mật khẩu.'; o.select(); }
-      else henBaoSai = setTimeout(() => { if (o.value.trim() === mk) $('#bao').textContent = 'Sai mật khẩu.'; }, 900);
-      return;
+    if (d) {
+      moDuoc = true;
+      o.value = '';
+      $('#bao').textContent = '';
+      dungHoSo(d);
+    } else if (tay) {
+      baoSai(o);
     }
-    canThuLai = false;
-    o.value = '';
-    $('#bao').textContent = '';
-    dungHoSo(d);
   } catch (err) {
     $('#bao').textContent = 'Không mở được: ' + err.message;
   } finally {
     dangMo = false;
     $('#nut-mo').disabled = false;
-    // Người dùng gõ thêm trong lúc đang thử → thử lại với giá trị mới
-    if (canThuLai) { canThuLai = false; if (o.value.trim() !== mk) thuMo(true); }
+    const cho = choThu;
+    choThu = null;
+    if (!moDuoc && cho) {
+      if (o.value.trim() !== mk) thuMo(cho.tay);  // đã gõ thêm → thử giá trị mới
+      else if (cho.tay) baoSai(o);                 // bấm Enter cho đúng giá trị vừa thử sai
+    }
   }
 }
 
@@ -249,10 +259,10 @@ function khoaLai() {
 
 // ---------- Gắn sự kiện ----------
 const sao = batSao($('#sao'));
-$('#form-mo').addEventListener('submit', (e) => { e.preventDefault(); thuMo(); });
+$('#form-mo').addEventListener('submit', (e) => { e.preventDefault(); thuMo(true); });
 $('#mat-khau').addEventListener('input', (e) => {
   $('#bao').textContent = '';
-  if (e.target.value.trim().length >= DO_DAI_TU_THU) thuMo(true);
+  if (e.target.value.trim().length >= DO_DAI_TU_THU) thuMo(false);
 });
 $('#nut-khoa').addEventListener('click', khoaLai);
 $('#dong-anh').addEventListener('click', () => $('#xem-anh').close());
